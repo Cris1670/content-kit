@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Content Kit Editor</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <div class="header-left">
+          <div class="app-icon" aria-hidden="true">
+            <img src="icons/image.png" alt="" />
+          </div>
+
+          <div>
+            <h1 class="title">Content Kit</h1>
+            <div class="status">
+              <span id="status-dot" class="status-dot"></span>
+              <span id="status" class="status-text">Checking page...</span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          id="power-button"
+          class="power-button"
+          type="button"
+          aria-label="Toggle extension"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+            <line x1="12" y1="2" x2="12" y2="12" />
+          </svg>
+        </button>
+      </header>
+
+      <section class="card" aria-labelledby="edit-title">
+        <div class="card-content">
+          <div class="toggle-section">
+            <div class="toggle-icon" aria-hidden="true">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+            </div>
+
+            <div class="toggle-info">
+              <h2 id="edit-title" class="toggle-title">Edit page content</h2>
+              <p class="toggle-description">
+                Allow direct text editing on the page
+              </p>
+            </div>
+          </div>
+
+          <label class="switch">
+            <input id="edit-mode" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="section locale-panel" aria-labelledby="locale-title">
+        <div class="section-header">
+          <div>
+            <h2 id="locale-title" class="section-title">Page Language</h2>
+            <p id="locale-note" class="section-description">
+              Switch language without using the website navigation.
+            </p>
+          </div>
+        </div>
+
+        <div id="locale-buttons" class="locale-grid"></div>
+      </section>
+
+      <section class="section file-panel" aria-labelledby="file-title">
+        <div>
+          <h2 id="file-title" class="section-title">Shared Edit File</h2>
+          <p id="file-status" class="section-description">
+            No edit file loaded.
+          </p>
+        </div>
+
+        <div class="button-group">
+          <button
+            id="load-file-button"
+            class="button button-primary"
+            type="button"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Load edits file
+          </button>
+
+          <button
+            id="save-file-button"
+            class="button button-primary"
+            type="button"
+            disabled
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Save edits file
+          </button>
+        </div>
+
+        <input
+          id="load-file-input"
+          type="file"
+          accept=".json,application/json"
+        />
+      </section>
+
+      <details id="edits-panel" class="section edits-panel">
+        <summary class="panel-summary">
+          <div class="panel-summary-text">
+            <h2 id="edits-title" class="section-title">Edited Content</h2>
+            <p id="edits-note" class="section-description">
+              No saved edits yet.
+            </p>
+          </div>
+
+          <label class="checkbox-control compact">
+            <input id="show-unedited" type="checkbox" />
+            <span>Show unedited</span>
+          </label>
+        </summary>
+
+        <div id="edits-tree" class="edit-tree"></div>
+      </details>
+
+      <section class="section downloads" aria-labelledby="downloads-title">
+        <div class="section-header">
+          <h2 id="downloads-title" class="section-title">Download Copy</h2>
+          <span id="total-badge" class="badge">0 total</span>
+        </div>
+
+        <p id="download-note" class="section-description">
+          No saved edits yet.
+        </p>
+
+        <div id="language-buttons" class="language-grid"></div>
+
+        <button
+          id="download-all"
+          class="button button-gradient"
+          type="button"
+          disabled
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Download all edits
+        </button>
+      </section>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

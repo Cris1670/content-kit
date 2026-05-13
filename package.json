@@ -1,0 +1,17 @@
+{
+  "name": "content-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline browser editing kit for static and i18n websites.",
+  "license": "MIT",
+  "bin": {
+    "content-kit": "./bin/content-kit.mjs"
+  },
+  "scripts": {
+    "init": "node bin/content-kit.mjs init",
+    "apply-edits": "node bin/content-kit.mjs apply-edits"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
