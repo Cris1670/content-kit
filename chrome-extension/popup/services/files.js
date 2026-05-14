@@ -37,7 +37,7 @@ const chooseSaveEditFile = async (suggestedName) => {
     return null;
   }
 
-  return await window.showSaveFilePicker({
+  return window.showSaveFilePicker({
     suggestedName,
     types: [
       {

@@ -33,7 +33,7 @@ const saveStore = async (store) => {
 };
 
 const getExtensionFlags = async () =>
-  await chrome.storage.local.get({
+  chrome.storage.local.get({
     contentKitEditMode: false,
     contentKitEnabled: false
   });

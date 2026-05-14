@@ -19,17 +19,21 @@
   "scripts": {
     "init": "node bin/content-kit.mjs init",
     "apply-edits": "node bin/content-kit.mjs apply-edits",
-    "check": "npm run format:check && npm run test:unit && node scripts/check.mjs",
+    "check": "npm run format:check && npm run lint && npm run test:unit && npm run validate",
+    "audit:ci": "npm audit --audit-level=high",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "eslint .",
     "test": "npm run check",
     "test:unit": "node --test",
+    "validate": "node scripts/check.mjs",
     "pack:check": "npm pack --dry-run"
   },
   "engines": {
     "node": ">=24"
   },
   "devDependencies": {
+    "eslint": "10.3.0",
     "prettier": "3.8.3"
   }
 }
