@@ -1,12 +1,26 @@
 {
-  "name": "content-kit",
+  "name": "@cris1670/content-kit",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "Offline browser editing kit for static and i18n websites.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cris1670/content-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Cris1670/content-kit/issues"
+  },
+  "homepage": "https://github.com/Cris1670/content-kit#readme",
+  "keywords": [
+    "content",
+    "i18n",
+    "next-intl",
+    "translations",
+    "chrome-extension"
+  ],
   "bin": {
-    "content-kit": "./bin/content-kit.mjs"
+    "content-kit": "bin/content-kit.mjs"
   },
   "files": [
     "bin/",

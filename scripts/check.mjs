@@ -53,12 +53,14 @@ const checkPackage = () => {
   const packageJson = readJson(join(root, 'package.json'));
 
   assert(
-    packageJson.name === 'content-kit',
-    'package name must stay content-kit'
+    packageJson.name === '@cris1670/content-kit',
+    'package name must stay @cris1670/content-kit'
   );
+  assert(!('private' in packageJson), 'published package must not be private');
   assert(
-    packageJson.private === true,
-    'package must stay private before public release'
+    packageJson.repository?.url ===
+      'git+https://github.com/Cris1670/content-kit.git',
+    'package repository must point to the public GitHub repository'
   );
   assert(packageJson.license === 'MIT', 'package license must be MIT');
   assert(

@@ -83,11 +83,17 @@ npm run content:init
 npm run content:apply-edits -- --input ~/Downloads/content-kit-edits-example-all.json
 ```
 
-Those aliases use a local package dependency while this package is not published
-to npm:
+Those aliases can use the published package:
+
+```sh
+npm install -D @cris1670/content-kit
+```
+
+During local development before publishing a change, use a local package
+dependency with the correct relative path:
 
 ```json
-"content-kit": "file:../../content-kit"
+"@cris1670/content-kit": "file:../../content-kit"
 ```
 
 `apply-edits` applies a browser-extension JSON edit export as a patch. It
