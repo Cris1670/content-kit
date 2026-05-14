@@ -7,11 +7,13 @@ Clients edit text and images on a tagged testing website with the Chrome
 extension, share a JSON edit file, and the developer applies that file locally
 with the Node CLI.
 
-The first implementation is built for
+The first implementation is compatible with
 [`next-intl`](https://next-intl.dev/) style JSON message catalogs, because
 `next-intl` is excellent and already does the hard internationalization work
-that this tool very much does not want to reinvent. More adapters are planned
-for future versions.
+that this tool very much does not want to reinvent. Content Kit is not an
+official `next-intl` project and is not affiliated with, endorsed by, or
+maintained by the `next-intl` maintainers. More adapters are planned for future
+versions.
 
 No CMS, login, online editor, or paid service is required. Just a browser,
 a JSON file, and the quiet hope that nobody asks for a "quick copy round" at
@@ -50,6 +52,9 @@ Content Kit currently targets JSON message catalogs shaped for
 [`next-intl`](https://github.com/amannn/next-intl) handles the serious i18n
 machinery for Next.js; Content Kit is just the small offline editing sidecar
 that tries to keep content meetings from becoming a lifestyle.
+
+`next-intl` is MIT licensed. Content Kit does not copy or bundle `next-intl`
+code; it only works with the message catalog shape used by `next-intl` projects.
 
 ## Client Workflow 🧑‍💻
 
