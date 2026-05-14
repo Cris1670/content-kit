@@ -7,9 +7,18 @@
   "bin": {
     "content-kit": "./bin/content-kit.mjs"
   },
+  "files": [
+    "bin/",
+    "src/",
+    "content-tool.mjs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "scripts": {
     "init": "node bin/content-kit.mjs init",
-    "apply-edits": "node bin/content-kit.mjs apply-edits"
+    "apply-edits": "node bin/content-kit.mjs apply-edits",
+    "pack:check": "npm pack --dry-run"
   },
   "engines": {
     "node": ">=20"

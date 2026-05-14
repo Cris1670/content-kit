@@ -656,6 +656,36 @@ svg {
   opacity: 0.8;
 }
 
+.popup-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: -6px;
+  color: var(--ck-muted);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.popup-footer div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.popup-footer a {
+  color: var(--ck-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.popup-footer a:hover,
+.popup-footer a:focus-visible {
+  color: var(--ck-primary-strong);
+  text-decoration: underline;
+}
+
 #load-file-input {
   display: none;
 }
