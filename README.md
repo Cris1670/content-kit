@@ -102,10 +102,10 @@ npm run audit:ci
 npm run pack:check
 ```
 
-`npm test` runs Prettier in check mode, ESLint, unit tests, syntax checks,
-package metadata checks, and Chrome extension manifest safety checks. CI also
-runs dependency auditing, Dependency Review on pull requests, CodeQL, and the
-npm package dry-run.
+`npm test` runs Prettier in check mode, ESLint with static security rules, unit
+tests, syntax checks, package metadata checks, and Chrome extension manifest
+safety checks. CI also runs dependency auditing, Dependency Review on pull
+requests, and the npm package dry-run.
 
 ## Package Structure 📦
 
@@ -166,8 +166,8 @@ local package dependency with the correct relative `file:` path, run
 Treat browser edit exports as untrusted input.
 
 - CI runs on pull requests, pushes to `main`, and release tags matching `v*`.
-- High-severity dependency audits, Dependency Review, and CodeQL are part of
-  the release gate.
+- High-severity dependency audits, static security linting, and Dependency
+  Review are part of the release gate.
 - The Chrome extension uses a restrictive Manifest V3 CSP, local scripts only,
   and no remote network calls.
 - Extension UI is built with DOM APIs and `textContent`, not `innerHTML`,

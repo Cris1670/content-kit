@@ -20,9 +20,9 @@ the public issue.
 ## Current CI Security Checks
 
 - `npm audit --audit-level=high` runs in CI.
+- ESLint runs static security rules through `eslint-plugin-security`.
 - GitHub Dependency Review runs on pull requests and blocks high-severity
   vulnerable dependency changes.
-- CodeQL runs for JavaScript and TypeScript security analysis.
 - Package validation checks keep the Chrome extension out of the npm package.
 - Extension manifest validation checks the restrictive CSP and local-only
   network model.
