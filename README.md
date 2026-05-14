@@ -1,9 +1,17 @@
 # Content Kit 📝✨
 
+[![CI](https://github.com/Cris1670/content-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/Cris1670/content-kit/actions/workflows/ci.yml)
+
 Content Kit is an offline browser-editing workflow for static and i18n websites.
 Clients edit text and images on a tagged testing website with the Chrome
 extension, share a JSON edit file, and the developer applies that file locally
 with the Node CLI.
+
+The first implementation is built for
+[`next-intl`](https://next-intl.dev/) style JSON message catalogs, because
+`next-intl` is excellent and already does the hard internationalization work
+that this tool very much does not want to reinvent. More adapters are planned
+for future versions.
 
 No CMS, login, online editor, or paid service is required. Just a browser,
 a JSON file, and the quiet hope that nobody asks for a "quick copy round" at
@@ -34,6 +42,14 @@ Pull requests are welcome. Reviews may take a bit, because this is currently a
 solo-maintainer operation and the maintainer is also probably building the thing
 that the content was supposed to go into. Small, focused PRs with clear test
 steps have the best chance of escaping the queue before the next content meeting.
+
+## Credits 🌍
+
+Content Kit currently targets JSON message catalogs shaped for
+[`next-intl`](https://next-intl.dev/). Credit where it is due:
+[`next-intl`](https://github.com/amannn/next-intl) handles the serious i18n
+machinery for Next.js; Content Kit is just the small offline editing sidecar
+that tries to keep content meetings from becoming a lifestyle.
 
 ## Client Workflow 🧑‍💻
 
@@ -71,6 +87,17 @@ to npm:
 
 `apply-edits` applies a browser-extension JSON edit export as a patch. It
 updates only the edited message keys and preserves unrelated messages.
+
+Run package checks from this repo:
+
+```sh
+npm test
+npm run format
+npm run pack:check
+```
+
+`npm test` runs Prettier in check mode, unit tests, syntax checks, package
+metadata checks, and Chrome extension manifest safety checks.
 
 ## Package Structure 📦
 

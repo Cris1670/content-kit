@@ -2,6 +2,7 @@
   "name": "content-kit",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Offline browser editing kit for static and i18n websites.",
   "license": "MIT",
   "bin": {
@@ -18,9 +19,17 @@
   "scripts": {
     "init": "node bin/content-kit.mjs init",
     "apply-edits": "node bin/content-kit.mjs apply-edits",
+    "check": "npm run format:check && npm run test:unit && node scripts/check.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run check",
+    "test:unit": "node --test",
     "pack:check": "npm pack --dry-run"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "prettier": "3.8.3"
   }
 }
