@@ -1,6 +1,7 @@
 const storageKey = 'contentKitBrowserEdits';
 const pendingScrollStorageKey = 'contentKitPendingScroll';
 const treeStateStorageKey = 'contentKitTreeState';
+const experimentalFeaturesStorageKey = 'contentKitExperimentalFeatures';
 const fileHandleDbName = 'content-kit-file-handles';
 const fileHandleStoreName = 'handles';
 const defaultLocales = ['en', 'de', 'fr', 'it'];
@@ -21,6 +22,7 @@ export {
   allowedImageExtensions,
   allowedImageTypes,
   defaultLocales,
+  experimentalFeaturesStorageKey,
   fileHandleDbName,
   fileHandleStoreName,
   forbiddenPathParts,

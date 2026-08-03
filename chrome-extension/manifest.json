@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Content Kit Editor",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Client-side browser editor for Content Kit tagged website text.",
   "permissions": ["storage", "activeTab"],
   "content_security_policy": {

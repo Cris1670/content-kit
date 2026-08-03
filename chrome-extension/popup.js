@@ -28,6 +28,7 @@ import {
   getStore,
   loadTreeUiState,
   saveEditModeEnabled,
+  saveExperimentalOrderingEnabled,
   saveExtensionEnabled,
   savePendingScroll,
   saveStore,
@@ -143,12 +144,30 @@ const renderAll = () => {
   renderDownloads(elements, activeProject, activeState, downloadExport);
 };
 
+const showSettingsView = (visible) => {
+  elements.editorView.hidden = visible;
+  elements.settingsView.hidden = !visible;
+  elements.settingsButton.classList.toggle('active', visible);
+  elements.settingsButton.setAttribute(
+    'aria-label',
+    visible ? 'Settings open' : 'Open settings'
+  );
+
+  if (visible) {
+    elements.settingsBackButton.focus();
+  } else {
+    elements.settingsButton.focus();
+  }
+};
+
 const loadState = async () => {
   const stored = await getExtensionFlags();
 
   treeUiState = await loadTreeUiState(treeUiState);
   elements.editsPanel.open = treeUiState.panelOpen;
   elements.editModeInput.checked = stored.contentKitEditMode;
+  elements.experimentalOrderingInput.checked =
+    stored.experimentalFeatures.ordering;
   elements.powerButton.classList.toggle('active', stored.contentKitEnabled);
 
   activeState = await sendToActiveTab({ type: 'content-kit:get-state' });
@@ -298,6 +317,25 @@ elements.powerButton.addEventListener('click', async () => {
   activeState = await sendToActiveTab({
     type: 'content-kit:set-enabled',
     enabled
+  });
+  await loadProject(activeState);
+  renderAll();
+});
+
+elements.settingsButton.addEventListener('click', () => {
+  showSettingsView(true);
+});
+
+elements.settingsBackButton.addEventListener('click', () => {
+  showSettingsView(false);
+});
+
+elements.experimentalOrderingInput.addEventListener('change', async () => {
+  const enabled = elements.experimentalOrderingInput.checked;
+
+  await saveExperimentalOrderingEnabled(enabled);
+  activeState = await sendToActiveTab({
+    type: 'content-kit:reload-settings'
   });
   await loadProject(activeState);
   renderAll();

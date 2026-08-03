@@ -35,6 +35,10 @@ const addEditToTree = (root, edit) => {
 };
 
 const getEntryLabel = (entry) => {
+  if (entry.kind === 'block') {
+    return entry.value;
+  }
+
   if (entry.kind === 'image' && entry.edited) {
     return `Image: ${entry.fileName ?? entry.value}`;
   }
