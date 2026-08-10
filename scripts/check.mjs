@@ -84,7 +84,7 @@ const checkExtensionManifest = () => {
   const csp = manifest.content_security_policy?.extension_pages ?? '';
 
   assert(manifest.manifest_version === 3, 'extension must use Manifest V3');
-  assert(manifest.version === '0.3.0', 'extension version must be 0.3.0');
+  assert(manifest.version === '0.4.0', 'extension version must be 0.4.0');
   assert(
     Array.isArray(manifest.permissions) &&
       manifest.permissions.includes('storage') &&

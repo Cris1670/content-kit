@@ -1,4 +1,5 @@
 import {
+  experimentalFeaturesStorageKey,
   maxContentKeyLength,
   storageKey,
   treeStateStorageKey
@@ -32,11 +33,21 @@ const saveStore = async (store) => {
   await chrome.storage.local.set({ [storageKey]: store });
 };
 
-const getExtensionFlags = async () =>
-  chrome.storage.local.get({
+const getExtensionFlags = async () => {
+  const result = await chrome.storage.local.get({
+    [experimentalFeaturesStorageKey]: { ordering: false },
     contentKitEditMode: false,
     contentKitEnabled: false
   });
+
+  return {
+    contentKitEditMode: result.contentKitEditMode === true,
+    contentKitEnabled: result.contentKitEnabled === true,
+    experimentalFeatures: {
+      ordering: result[experimentalFeaturesStorageKey]?.ordering === true
+    }
+  };
+};
 
 const saveExtensionEnabled = async (enabled) => {
   const nextState = enabled
@@ -50,6 +61,22 @@ const saveExtensionEnabled = async (enabled) => {
 
 const saveEditModeEnabled = async (enabled) => {
   await chrome.storage.local.set({ contentKitEditMode: enabled });
+};
+
+const saveExperimentalOrderingEnabled = async (enabled) => {
+  const result = await chrome.storage.local.get({
+    [experimentalFeaturesStorageKey]: {}
+  });
+  const currentFeatures = result[experimentalFeaturesStorageKey];
+
+  await chrome.storage.local.set({
+    [experimentalFeaturesStorageKey]: {
+      ...(currentFeatures && typeof currentFeatures === 'object'
+        ? currentFeatures
+        : {}),
+      ordering: enabled === true
+    }
+  });
 };
 
 const loadTreeUiState = async (fallbackState) => {
@@ -89,6 +116,7 @@ export {
   getStore,
   loadTreeUiState,
   saveEditModeEnabled,
+  saveExperimentalOrderingEnabled,
   saveExtensionEnabled,
   savePendingScroll,
   saveStore,

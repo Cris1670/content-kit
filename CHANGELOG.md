@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning where practical.
 
+## [0.2.0] - 2026-08-03
+
+### Added
+
+- Opt-in repeatable block duplication and removal using stable item IDs.
+- Version 2 browser edit exports with cross-locale structural operations and localized duplicate text overrides.
+- Animated pointer and keyboard reordering for complete repeatable collections, with reduced-motion support and strict final-ID validation.
+- Popup settings with a persistent, opt-in experimental flag for block ordering.
+- Idempotent CLI application and collection limits for block edits.
+
 ## [0.1.0] - 2026-05-14
 
 ### Added

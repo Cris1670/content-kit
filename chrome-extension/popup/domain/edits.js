@@ -8,7 +8,8 @@ import {
 
 const countLocaleEdits = (project, locale) =>
   Object.keys(project?.edits?.[locale] ?? {}).length +
-  Object.keys(project?.imageEdits?.[locale] ?? {}).length;
+  Object.keys(project?.imageEdits?.[locale] ?? {}).length +
+  Object.keys(project?.blockEdits ?? {}).length;
 
 const countProjectEdits = (project) =>
   Object.values(project?.edits ?? {}).reduce(
@@ -18,7 +19,25 @@ const countProjectEdits = (project) =>
   Object.values(project?.imageEdits ?? {}).reduce(
     (total, localeEdits) => total + Object.keys(localeEdits).length,
     0
-  );
+  ) +
+  Object.keys(project?.blockEdits ?? {}).length;
+
+const allowedBlockOperations = new Set(['duplicate', 'remove', 'reorder']);
+const forbiddenBlockIds = new Set(['__proto__', 'constructor', 'prototype']);
+
+const isSafeBlockId = (value) =>
+  typeof value === 'string' &&
+  value.length > 0 &&
+  value.length <= 128 &&
+  /^[A-Za-z0-9_-]+$/u.test(value) &&
+  !forbiddenBlockIds.has(value);
+
+const getBlockEditStorageKey = (edit) =>
+  edit.operation === 'reorder'
+    ? `reorder:${edit.collection}`
+    : edit.operation === 'remove'
+      ? `remove:${edit.collection}:${edit.itemId}`
+      : `duplicate:${edit.collection}:${edit.newId}`;
 
 const getAllowedLocales = (state) =>
   new Set(
@@ -71,6 +90,30 @@ const getEditEntries = (project, locale) => {
       });
     }
   );
+
+  Object.values(project?.blockEdits ?? {}).forEach((edit) => {
+    const itemId =
+      edit.operation === 'reorder'
+        ? 'order'
+        : edit.operation === 'remove'
+          ? edit.itemId
+          : edit.newId;
+
+    entries.push({
+      edited: true,
+      key: `${edit.collection}.${edit.operation}_${itemId}`,
+      kind: 'block',
+      locale,
+      updatedAt: edit.updatedAt,
+      url: edit.url,
+      value:
+        edit.operation === 'reorder'
+          ? `Reorder ${edit.itemIds.length} blocks`
+          : edit.operation === 'remove'
+            ? `Remove block ${edit.itemId}`
+            : `Duplicate block ${edit.sourceId}`
+    });
+  });
 
   return entries.sort((left, right) => {
     if (left.locale !== right.locale) {
@@ -134,6 +177,12 @@ const getVisibleTreeEntries = (project, state, showUnedited) => {
 
 const getProjectLocales = (project, state) => {
   const localeSet = getAllowedLocales(state);
+
+  (project?.locales ?? []).forEach((locale) => {
+    if (isSupportedLocale(locale)) {
+      localeSet.add(locale);
+    }
+  });
 
   Object.keys(project?.edits ?? {}).forEach((locale) => {
     if (isSupportedLocale(locale)) {
@@ -202,11 +251,153 @@ const normalizeEditPayload = (payload) => {
     return edits;
   }
 
-  if (Array.isArray(payload.imageEdits)) {
+  if (Array.isArray(payload.imageEdits) || Array.isArray(payload.blockEdits)) {
     return [];
   }
 
   throw new Error('Edit file must contain an edits array or messages object.');
+};
+
+const normalizeBlockEditPayload = (payload, state) => {
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    !Array.isArray(payload.blockEdits)
+  ) {
+    return [];
+  }
+
+  if (payload.blockEdits.length > 500) {
+    throw new Error('Edit file cannot contain more than 500 block edits.');
+  }
+
+  return payload.blockEdits.map((edit, index) => {
+    const label = `Block edit ${index + 1}`;
+
+    if (
+      !edit ||
+      typeof edit !== 'object' ||
+      typeof edit.collection !== 'string' ||
+      !allowedBlockOperations.has(edit.operation)
+    ) {
+      throw new Error(`${label} must have a collection and valid operation.`);
+    }
+
+    parseMessagePath(edit.collection);
+
+    const collectionConfig =
+      state?.contentConfig?.collections?.[edit.collection];
+
+    if (!collectionConfig || typeof collectionConfig !== 'object') {
+      throw new Error(
+        `${label}: collection "${edit.collection}" is not configured.`
+      );
+    }
+
+    if (!collectionConfig.operations?.includes(edit.operation)) {
+      throw new Error(
+        `${label}: operation "${edit.operation}" is not enabled for "${edit.collection}".`
+      );
+    }
+
+    if (edit.operation === 'remove') {
+      if (!isSafeBlockId(edit.itemId)) {
+        throw new Error(`${label}: itemId must be a safe stable ID.`);
+      }
+
+      return {
+        collection: edit.collection,
+        itemId: edit.itemId,
+        operation: edit.operation,
+        updatedAt:
+          typeof edit.updatedAt === 'string'
+            ? edit.updatedAt
+            : new Date().toISOString(),
+        url: getSafeEditUrl(edit.url, state?.origin)
+      };
+    }
+
+    if (edit.operation === 'reorder') {
+      if (
+        !Array.isArray(edit.itemIds) ||
+        edit.itemIds.length === 0 ||
+        edit.itemIds.some((itemId) => !isSafeBlockId(itemId))
+      ) {
+        throw new Error(`${label}: itemIds must contain safe stable IDs.`);
+      }
+
+      if (new Set(edit.itemIds).size !== edit.itemIds.length) {
+        throw new Error(`${label}: itemIds cannot contain duplicate IDs.`);
+      }
+
+      return {
+        collection: edit.collection,
+        itemIds: [...edit.itemIds],
+        operation: edit.operation,
+        updatedAt:
+          typeof edit.updatedAt === 'string'
+            ? edit.updatedAt
+            : new Date().toISOString(),
+        url: getSafeEditUrl(edit.url, state?.origin)
+      };
+    }
+
+    if (!isSafeBlockId(edit.sourceId) || !isSafeBlockId(edit.newId)) {
+      throw new Error(`${label}: sourceId and newId must be safe stable IDs.`);
+    }
+
+    if (edit.sourceId === edit.newId) {
+      throw new Error(`${label}: newId must differ from sourceId.`);
+    }
+
+    if (edit.afterId != null && !isSafeBlockId(edit.afterId)) {
+      throw new Error(`${label}: afterId must be a safe stable ID.`);
+    }
+
+    const overrides = {};
+
+    Object.entries(edit.overrides ?? {}).forEach(([locale, values]) => {
+      assertSafeLocale(state, locale, `${label} override`);
+
+      if (!values || typeof values !== 'object' || Array.isArray(values)) {
+        throw new Error(
+          `${label}: overrides for "${locale}" must be an object.`
+        );
+      }
+
+      overrides[locale] = {};
+
+      Object.entries(values).forEach(([key, value]) => {
+        const pathParts = parseMessagePath(key);
+
+        if (pathParts[0] === collectionConfig.idField) {
+          throw new Error(`${label}: the stable ID field cannot be edited.`);
+        }
+
+        if (typeof value !== 'string') {
+          throw new Error(
+            `${label}: override "${locale}.${key}" must be text.`
+          );
+        }
+
+        overrides[locale][key] = value;
+      });
+    });
+
+    return {
+      afterId: edit.afterId ?? edit.sourceId,
+      collection: edit.collection,
+      newId: edit.newId,
+      operation: edit.operation,
+      overrides,
+      sourceId: edit.sourceId,
+      updatedAt:
+        typeof edit.updatedAt === 'string'
+          ? edit.updatedAt
+          : new Date().toISOString(),
+      url: getSafeEditUrl(edit.url, state?.origin)
+    };
+  });
 };
 
 const normalizeImageEditPayload = (payload) => {
@@ -253,6 +444,7 @@ const ensureProject = (store, payload, activeProjectId, payloadOrigin) => {
   ) {
     store.projects[origin] = {
       edits: {},
+      locales: Array.isArray(payload?.locales) ? payload.locales : [],
       origin,
       title:
         payload?.project && typeof payload.project.title === 'string'
@@ -260,6 +452,15 @@ const ensureProject = (store, payload, activeProjectId, payloadOrigin) => {
           : origin,
       updatedAt: new Date().toISOString()
     };
+  }
+
+  if (Array.isArray(payload?.locales)) {
+    store.projects[origin].locales = Array.from(
+      new Set([
+        ...(store.projects[origin].locales ?? []),
+        ...payload.locales.filter(isSupportedLocale)
+      ])
+    );
   }
 
   return store.projects[origin];
@@ -274,6 +475,7 @@ const mergeEditPayload = ({
 }) => {
   const edits = normalizeEditPayload(payload);
   const imageEdits = normalizeImageEditPayload(payload);
+  const blockEdits = normalizeBlockEditPayload(payload, state);
   const project = ensureProject(store, payload, activeProjectId, payloadOrigin);
 
   if (!project.edits || typeof project.edits !== 'object') {
@@ -339,10 +541,46 @@ const mergeEditPayload = ({
     };
   });
 
+  if (
+    !project.blockEdits ||
+    typeof project.blockEdits !== 'object' ||
+    Array.isArray(project.blockEdits)
+  ) {
+    project.blockEdits = {};
+  }
+
+  blockEdits.forEach((edit) => {
+    const storageKey = getBlockEditStorageKey(edit);
+    const existing = project.blockEdits[storageKey];
+
+    if (edit.operation !== 'duplicate') {
+      project.blockEdits[storageKey] = {
+        ...existing,
+        ...edit
+      };
+      return;
+    }
+
+    const overrides = { ...(existing?.overrides ?? {}) };
+
+    Object.entries(edit.overrides ?? {}).forEach(([locale, values]) => {
+      overrides[locale] = {
+        ...(overrides[locale] ?? {}),
+        ...values
+      };
+    });
+
+    project.blockEdits[storageKey] = {
+      ...existing,
+      ...edit,
+      overrides
+    };
+  });
+
   project.updatedAt = new Date().toISOString();
 
   return {
-    count: edits.length + imageEdits.length,
+    count: edits.length + imageEdits.length + blockEdits.length,
     project
   };
 };
@@ -352,6 +590,7 @@ const buildExport = (project, locale) => {
     ? [locale]
     : Array.from(
         new Set([
+          ...(project.locales ?? []),
           ...Object.keys(project.edits ?? {}),
           ...Object.keys(project.imageEdits ?? {})
         ])
@@ -359,6 +598,18 @@ const buildExport = (project, locale) => {
   const messages = {};
   const edits = [];
   const imageEdits = [];
+  const blockEdits = Object.values(project.blockEdits ?? {}).map((edit) =>
+    edit.operation === 'duplicate'
+      ? {
+          ...edit,
+          overrides: locale
+            ? edit.overrides?.[locale]
+              ? { [locale]: edit.overrides[locale] }
+              : {}
+            : (edit.overrides ?? {})
+        }
+      : { ...edit }
+  );
 
   locales.forEach((currentLocale) => {
     messages[currentLocale] = {};
@@ -394,7 +645,7 @@ const buildExport = (project, locale) => {
 
   return {
     format: 'content-kit-browser-edits',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     project: {
       origin: project.origin,
@@ -403,7 +654,8 @@ const buildExport = (project, locale) => {
     locales,
     messages,
     edits,
-    imageEdits
+    imageEdits,
+    blockEdits
   };
 };
 
