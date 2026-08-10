@@ -8,99 +8,180 @@
   </head>
   <body>
     <main class="container">
-      <header class="header">
-        <div class="header-left">
-          <div class="app-icon" aria-hidden="true">
-            <img src="icons/image.png" alt="" />
-          </div>
+      <div id="editor-view" class="popup-view">
+        <header class="header">
+          <div class="header-left">
+            <div class="app-icon" aria-hidden="true">
+              <img src="icons/image.png" alt="" />
+            </div>
 
-          <div>
-            <h1 class="title">Content Kit</h1>
-            <div class="status">
-              <span id="status-dot" class="status-dot"></span>
-              <span id="status" class="status-text">Checking page...</span>
+            <div>
+              <h1 class="title">Content Kit</h1>
+              <div class="status">
+                <span id="status-dot" class="status-dot"></span>
+                <span id="status" class="status-text">Checking page...</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          id="power-button"
-          class="power-button"
-          type="button"
-          aria-label="Toggle extension"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
+          <button
+            id="power-button"
+            class="power-button"
+            type="button"
+            aria-label="Toggle extension"
           >
-            <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
-            <line x1="12" y1="2" x2="12" y2="12" />
-          </svg>
-        </button>
-      </header>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+              <line x1="12" y1="2" x2="12" y2="12" />
+            </svg>
+          </button>
+        </header>
 
-      <section class="card" aria-labelledby="edit-title">
-        <div class="card-content">
-          <div class="toggle-section">
-            <div class="toggle-icon" aria-hidden="true">
+        <section class="card" aria-labelledby="edit-title">
+          <div class="card-content">
+            <div class="toggle-section">
+              <div class="toggle-icon" aria-hidden="true">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+              </div>
+
+              <div class="toggle-info">
+                <h2 id="edit-title" class="toggle-title">Edit page content</h2>
+                <p class="toggle-description">
+                  Allow direct text editing on the page
+                </p>
+              </div>
+            </div>
+
+            <label class="switch">
+              <input id="edit-mode" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </section>
+
+        <section class="section locale-panel" aria-labelledby="locale-title">
+          <div class="section-header">
+            <div>
+              <h2 id="locale-title" class="section-title">Page Language</h2>
+              <p id="locale-note" class="section-description">
+                Switch language without using the website navigation.
+              </p>
+            </div>
+          </div>
+
+          <div id="locale-buttons" class="locale-grid"></div>
+        </section>
+
+        <section class="section file-panel" aria-labelledby="file-title">
+          <div>
+            <h2 id="file-title" class="section-title">Shared Edit File</h2>
+            <p id="file-status" class="section-description">
+              No edit file loaded.
+            </p>
+          </div>
+
+          <div class="button-group">
+            <button
+              id="load-file-button"
+              class="button button-primary"
+              type="button"
+            >
               <svg
-                width="20"
-                height="20"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-            </div>
+              Load edits file
+            </button>
 
-            <div class="toggle-info">
-              <h2 id="edit-title" class="toggle-title">Edit page content</h2>
-              <p class="toggle-description">
-                Allow direct text editing on the page
+            <button
+              id="save-file-button"
+              class="button button-primary"
+              type="button"
+              disabled
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Save edits file
+            </button>
+          </div>
+
+          <input
+            id="load-file-input"
+            type="file"
+            accept=".json,application/json"
+          />
+        </section>
+
+        <details id="edits-panel" class="section edits-panel">
+          <summary class="panel-summary">
+            <div class="panel-summary-text">
+              <h2 id="edits-title" class="section-title">Edited Content</h2>
+              <p id="edits-note" class="section-description">
+                No saved edits yet.
               </p>
             </div>
+
+            <label class="checkbox-control compact">
+              <input id="show-unedited" type="checkbox" />
+              <span>Show unedited</span>
+            </label>
+          </summary>
+
+          <div id="edits-tree" class="edit-tree"></div>
+        </details>
+
+        <section class="section downloads" aria-labelledby="downloads-title">
+          <div class="section-header">
+            <h2 id="downloads-title" class="section-title">Download Copy</h2>
+            <span id="total-badge" class="badge">0 total</span>
           </div>
 
-          <label class="switch">
-            <input id="edit-mode" type="checkbox" />
-            <span class="slider"></span>
-          </label>
-        </div>
-      </section>
-
-      <section class="section locale-panel" aria-labelledby="locale-title">
-        <div class="section-header">
-          <div>
-            <h2 id="locale-title" class="section-title">Page Language</h2>
-            <p id="locale-note" class="section-description">
-              Switch language without using the website navigation.
-            </p>
-          </div>
-        </div>
-
-        <div id="locale-buttons" class="locale-grid"></div>
-      </section>
-
-      <section class="section file-panel" aria-labelledby="file-title">
-        <div>
-          <h2 id="file-title" class="section-title">Shared Edit File</h2>
-          <p id="file-status" class="section-description">
-            No edit file loaded.
+          <p id="download-note" class="section-description">
+            No saved edits yet.
           </p>
-        </div>
 
-        <div class="button-group">
+          <div id="language-buttons" class="language-grid"></div>
+
           <button
-            id="load-file-button"
-            class="button button-primary"
+            id="download-all"
+            class="button button-gradient"
             type="button"
+            disabled
           >
             <svg
               width="16"
@@ -114,103 +195,139 @@
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Load edits file
+            Download all edits
           </button>
+        </section>
+      </div>
 
+      <section
+        id="settings-view"
+        class="popup-view settings-view"
+        aria-labelledby="settings-title"
+        hidden
+      >
+        <header class="settings-header">
           <button
-            id="save-file-button"
-            class="button button-primary"
+            id="settings-back-button"
+            class="icon-button"
             type="button"
-            disabled
+            aria-label="Back to editor"
+            title="Back to editor"
           >
             <svg
-              width="16"
-              height="16"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
+              aria-hidden="true"
             >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
             </svg>
-            Save edits file
           </button>
-        </div>
 
-        <input
-          id="load-file-input"
-          type="file"
-          accept=".json,application/json"
-        />
-      </section>
-
-      <details id="edits-panel" class="section edits-panel">
-        <summary class="panel-summary">
-          <div class="panel-summary-text">
-            <h2 id="edits-title" class="section-title">Edited Content</h2>
-            <p id="edits-note" class="section-description">
-              No saved edits yet.
+          <div>
+            <h1 id="settings-title" class="title">Settings</h1>
+            <p class="section-description">
+              Control optional Content Kit capabilities.
             </p>
           </div>
+        </header>
 
-          <label class="checkbox-control compact">
-            <input id="show-unedited" type="checkbox" />
-            <span>Show unedited</span>
-          </label>
-        </summary>
+        <section class="settings-panel" aria-labelledby="experimental-title">
+          <div class="settings-panel-header">
+            <div>
+              <h2 id="experimental-title" class="section-title">
+                Experimental features
+              </h2>
+              <p class="section-description">
+                Features that are still being tested.
+              </p>
+            </div>
+            <span class="experimental-badge">Experimental</span>
+          </div>
 
-        <div id="edits-tree" class="edit-tree"></div>
-      </details>
+          <div class="settings-option">
+            <div class="settings-option-icon" aria-hidden="true">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="17 1 21 5 17 9" />
+                <line x1="3" y1="5" x2="21" y2="5" />
+                <polyline points="7 23 3 19 7 15" />
+                <line x1="21" y1="19" x2="3" y2="19" />
+              </svg>
+            </div>
 
-      <section class="section downloads" aria-labelledby="downloads-title">
-        <div class="section-header">
-          <h2 id="downloads-title" class="section-title">Download Copy</h2>
-          <span id="total-badge" class="badge">0 total</span>
+            <div class="settings-option-copy">
+              <h3 class="toggle-title">Block ordering</h3>
+              <p class="toggle-description">
+                Enable drag-and-drop and Up/Down controls for complete
+                collections.
+              </p>
+            </div>
+
+            <label class="switch">
+              <input
+                id="experimental-ordering"
+                type="checkbox"
+                aria-label="Enable experimental block ordering"
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <p class="settings-note">
+            Saved ordering edits are preserved while this feature is off.
+          </p>
+        </section>
+      </section>
+
+      <footer class="popup-footer">
+        <div class="footer-copy">
+          <div>
+            <span>Content Kit v0.4.0</span>
+            <span aria-hidden="true">·</span>
+            <a
+              href="https://github.com/Cris1670/content-kit"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>
+          </div>
+          <div>Copyright © 2026 Cris1670</div>
         </div>
 
-        <p id="download-note" class="section-description">
-          No saved edits yet.
-        </p>
-
-        <div id="language-buttons" class="language-grid"></div>
-
         <button
-          id="download-all"
-          class="button button-gradient"
+          id="settings-button"
+          class="settings-button"
           type="button"
-          disabled
+          aria-label="Open settings"
+          title="Settings"
         >
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
+            aria-hidden="true"
           >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.1-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.1 1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6h.02A1.7 1.7 0 0 0 10 3.04V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.02A1.7 1.7 0 0 0 20.96 10H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15Z"
+            />
           </svg>
-          Download all edits
         </button>
-      </section>
-
-      <footer class="popup-footer">
-        <div>
-          <span>Content Kit v0.3.0</span>
-          <span aria-hidden="true">·</span>
-          <a
-            href="https://github.com/Cris1670/content-kit"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
-        </div>
-        <div>Copyright © 2026 Cris1670</div>
       </footer>
     </main>
 

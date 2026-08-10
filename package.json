@@ -1,6 +1,6 @@
 {
   "name": "@cris1670/content-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Offline browser editing kit for static and i18n websites.",
   "license": "MIT",
@@ -22,8 +22,16 @@
   "bin": {
     "content-kit": "bin/content-kit.mjs"
   },
+  "main": "./browser.mjs",
+  "types": "./browser.d.mts",
+  "exports": {
+    ".": "./browser.mjs",
+    "./browser": "./browser.mjs"
+  },
   "files": [
     "bin/",
+    "browser.d.mts",
+    "browser.mjs",
     "src/",
     "content-tool.mjs",
     "README.md",

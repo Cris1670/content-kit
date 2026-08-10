@@ -155,6 +155,7 @@ const renderTreeBranch = (
     button.classList.toggle('unedited', !node.edit.edited);
     button.classList.toggle('has-change', node.edit.edited || node.edit.dirty);
     button.type = 'button';
+    button.disabled = node.edit.kind === 'block';
 
     key.className = 'edit-tree-key';
     key.textContent = label;
@@ -163,9 +164,11 @@ const renderTreeBranch = (
     value.textContent = getEntryLabel(node.edit);
 
     button.append(key, value);
-    button.addEventListener('click', () => {
-      callbacks.onNavigateToEdit(node.edit);
-    });
+    if (node.edit.kind !== 'block') {
+      button.addEventListener('click', () => {
+        callbacks.onNavigateToEdit(node.edit);
+      });
+    }
 
     return button;
   }

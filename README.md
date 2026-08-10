@@ -70,7 +70,7 @@ Client rules:
 2. Turn on the extension with the power button.
 3. Use the language switcher in the extension when reviewing each locale.
 4. Turn on Edit page text only while editing inline copy.
-5. Edit outlined text directly on the page, or click an outlined image to choose a replacement file.
+5. Edit outlined text directly, replace outlined images, or use Duplicate and Remove on enabled repeatable blocks.
 6. Save/load the shared edit JSON file from the extension popup.
 7. Return the final `content-kit-edits-...json` file.
 
@@ -96,6 +96,24 @@ dependency with the correct relative path:
 "@cris1670/content-kit": "file:../../content-kit"
 ```
 
+### Browser Marker Helper
+
+The package owns the browser marker contract. A consuming app can import the
+generic marker factory from `@cris1670/content-kit` and keep its own
+visual components free of Content Kit-specific types and rendering behavior:
+
+```js
+import { createContentKitMarkers } from '@cris1670/content-kit';
+
+const { edit, image, block, collection } = createContentKitMarkers({
+  enabled: true
+});
+```
+
+The helper only returns `data-ck-*` attributes. Icon components, design-system
+components, and other presentation details remain the responsibility of the
+consuming app.
+
 `apply-edits` applies a browser-extension JSON edit export as a patch. It
 updates only the edited message keys and preserves unrelated messages.
 
@@ -119,6 +137,7 @@ requests, and the npm package dry-run.
 bin/content-kit.mjs        # executable entrypoint
 chrome-extension/          # unpacked Chrome extension
 content-tool.mjs           # compatibility wrapper
+src/browser/               # framework-agnostic browser marker helpers
 src/cli/                   # command parsing and dispatch
 src/config/                # config loading and project detection
 src/edits/                 # browser edit export normalization and applying
@@ -148,6 +167,7 @@ detection fails, it writes defaults and tells you which fields need review.
 {
   "locales": ["en", "de", "fr", "it"],
   "baseLocale": "en",
+  "collections": {},
   "imagePublicPath": "/content-kit-images",
   "imagesDir": "public/content-kit-images",
   "localePathPattern": "^/(?<locale>[A-Za-z]{2})(?<rest>/.*)?$",
@@ -162,6 +182,131 @@ public URL prefix stored back into message JSON for those image replacements.
 to find the language segment in the current URL. It must include a named
 `locale` capture group. For example, `^/(?<locale>[A-Za-z]{2})(?<rest>/.*)?$`
 matches routes like `/en/about` and lets the extension switch to `/de/about`.
+
+### Repeatable Blocks
+
+Content Kit can duplicate, remove, and reorder opt-in array items that have stable IDs.
+Structural changes apply to every configured locale, while text overrides on a
+duplicated block remain locale-specific.
+
+Configure each allowed collection explicitly:
+
+```json
+{
+  "collections": {
+    "Team.members": {
+      "idField": "id",
+      "minItems": 1,
+      "maxItems": 50,
+      "operations": ["duplicate", "remove", "reorder"]
+    }
+  }
+}
+```
+
+Every locale must contain the collection as an array, and corresponding items
+must use the same unique string IDs in the same order. The browser-facing Content Kit config must
+include the same `collections` object. Mark each rendered item with its
+collection, stable ID, and original array-item path:
+
+```html
+<article
+  data-ck-block="Team.members"
+  data-ck-block-id="member-1"
+  data-ck-block-prefix="Team.members[0]"
+>
+  <h2 data-ck-edit="Team.members[0].name">Ada Example</h2>
+</article>
+```
+
+Wrap the rendered blocks in a collection boundary. The total is the unfiltered
+number of original items, so Content Kit can disable reordering when the page is
+showing only a filtered subset:
+
+```html
+<div data-ck-collection="Team.members" data-ck-collection-total="12">
+  <!-- Direct child blocks -->
+</div>
+```
+
+For controlled string fields such as an icon name, define the allow-listed
+options once in `content-kit.config.json`. The consuming app only references
+that selection by ID; Content Kit shows the configured options in a compact
+picker and saves the selected value as a normal message edit:
+
+```json
+{
+  "selections": {
+    "technology-icons": {
+      "scope": "all",
+      "options": [
+        {
+          "label": "Settings",
+          "value": "settings",
+          "icon": "/content-kit-icons/settings.svg"
+        },
+        { "label": "Workflow", "value": "workflow" }
+      ]
+    }
+  }
+}
+```
+
+The selection marker only needs the config ID:
+
+```html
+<div
+  data-ck-select="Services.items[0].icon"
+  data-ck-select-value="settings"
+  data-ck-select-config="technology-icons"
+  data-ck-select-scope="all"
+></div>
+```
+
+Option values must be stable alphanumeric, underscore, or hyphen identifiers.
+The current value must match one of the configured options. Set `scope` to
+`"all"` for shared design fields that must be updated in every configured
+locale. `icon` is optional; when supplied, it must be a same-origin absolute
+path to an SVG file. It is used in the picker and to replace the visible icon
+after selection. Selection fields inside duplicated blocks can be changed before import
+just like text fields. The picker displays six options at a time and adds
+previous/next page controls with a page count when more options are available.
+
+In edit mode, the extension adds Move, Up, Down, Duplicate, and Remove controls
+for the operations enabled by the collection config. Dragging uses a direct
+pointer-following preview and a short FLIP transition for surrounding blocks.
+Up and Down provide instant keyboard reordering, Escape cancels an active drag,
+and reduced-motion preferences disable the lift and settling animations. Duplicate
+creates an in-browser preview and supports editing its marked content fields.
+Images inside a duplicated preview retain the source image; import the block
+before replacing that new image. Remove stays visible as a reversible preview
+until the edit export is applied.
+
+Ordering is an experimental browser feature and is off by default. Enable it
+from the cog button in the popup footer. Disabling it restores the original
+rendered order and hides Move, Up, and Down without deleting saved reorder edits.
+
+Block action controls render outside the edited block by default. Content Kit
+automatically chooses among top, bottom, left, and right placements, avoids other
+marked content, stays within the viewport, and repositions on scroll or resize.
+For an unusual layout, set `data-ck-controls-position` on the block to `auto`,
+`top-start`, `top-end`, `bottom-start`, `bottom-end`, `left`, or `right`:
+
+```html
+<article
+  data-ck-block="Projects.items"
+  data-ck-block-id="project-1"
+  data-ck-block-prefix="Projects.items[0]"
+  data-ck-controls-position="bottom-end"
+></article>
+```
+
+On devices without hover, the first tap selects a block and reveals its toolbar
+without triggering the block's underlying link or card action. Only one block
+toolbar is shown at a time.
+
+Block edits are idempotent. This allows separate language edit files to carry
+the same structural operation without duplicating or removing the block twice.
 
 To reuse this kit for another project before npm publishing, add this repo as a
 local package dependency with the correct relative `file:` path, run
@@ -188,3 +333,7 @@ Treat browser edit exports as untrusted input.
 - Message paths reject prototype-pollution keys such as `__proto__`,
   `constructor`, and `prototype`, and cap array indexes to avoid sparse-array
   denial-of-service cases.
+- Block operations are limited to explicitly configured collections, preserve
+  stable IDs, and enforce per-collection minimum and maximum item counts.
+- Reorder imports must contain the exact final ID set after duplicates and
+  removals, preventing stale or filtered orders from dropping items.
