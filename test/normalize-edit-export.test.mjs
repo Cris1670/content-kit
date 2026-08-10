@@ -2,11 +2,20 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  normalizeBrowserBlockEditExport,
   normalizeBrowserEditExport,
   normalizeBrowserImageEditExport
 } from '../src/edits/normalize-edit-export.mjs';
 
 const config = {
+  collections: {
+    'Team.members': {
+      idField: 'id',
+      maxItems: 20,
+      minItems: 1,
+      operations: ['duplicate', 'remove', 'reorder']
+    }
+  },
   locales: ['en', 'de']
 };
 
@@ -123,5 +132,141 @@ test('normalizeBrowserImageEditExport rejects unsafe image keys', () => {
         config
       ),
     /forbidden path segment/
+  );
+});
+
+test('normalizeBrowserBlockEditExport accepts duplicate edits with localized overrides', () => {
+  assert.deepEqual(
+    normalizeBrowserBlockEditExport(
+      {
+        blockEdits: [
+          {
+            collection: 'Team.members',
+            newId: 'ck_new',
+            operation: 'duplicate',
+            overrides: {
+              en: {
+                name: 'New name'
+              }
+            },
+            sourceId: 'member-1'
+          }
+        ]
+      },
+      config
+    ),
+    [
+      {
+        afterId: 'member-1',
+        collection: 'Team.members',
+        newId: 'ck_new',
+        operation: 'duplicate',
+        overrides: {
+          en: {
+            name: 'New name'
+          }
+        },
+        sourceId: 'member-1'
+      }
+    ]
+  );
+});
+
+test('normalizeBrowserBlockEditExport rejects unconfigured collections', () => {
+  assert.throws(
+    () =>
+      normalizeBrowserBlockEditExport(
+        {
+          blockEdits: [
+            {
+              collection: 'Projects.items',
+              itemId: 'project-1',
+              operation: 'remove'
+            }
+          ]
+        },
+        config
+      ),
+    /collection "Projects.items" is not configured/
+  );
+});
+
+test('normalizeBrowserBlockEditExport accepts a collection reorder', () => {
+  assert.deepEqual(
+    normalizeBrowserBlockEditExport(
+      {
+        blockEdits: [
+          {
+            collection: 'Team.members',
+            itemIds: ['member-2', 'member-1'],
+            operation: 'reorder'
+          }
+        ]
+      },
+      config
+    ),
+    [
+      {
+        collection: 'Team.members',
+        itemIds: ['member-2', 'member-1'],
+        operation: 'reorder'
+      }
+    ]
+  );
+});
+
+test('normalizeBrowserBlockEditExport rejects duplicate reorder IDs', () => {
+  assert.throws(
+    () =>
+      normalizeBrowserBlockEditExport(
+        {
+          blockEdits: [
+            {
+              collection: 'Team.members',
+              itemIds: ['member-1', 'member-1'],
+              operation: 'reorder'
+            }
+          ]
+        },
+        config
+      ),
+    /cannot contain duplicate IDs/
+  );
+});
+
+test('normalizeBrowserEditExport accepts block-only exports', () => {
+  assert.deepEqual(
+    normalizeBrowserEditExport(
+      {
+        blockEdits: [
+          {
+            collection: 'Team.members',
+            itemId: 'member-1',
+            operation: 'remove'
+          }
+        ]
+      },
+      config
+    ),
+    []
+  );
+});
+
+test('normalizeBrowserEditExport rejects edits to configured stable IDs', () => {
+  assert.throws(
+    () =>
+      normalizeBrowserEditExport(
+        {
+          edits: [
+            {
+              key: 'Team.members[0].id',
+              locale: 'en',
+              value: 'replacement-id'
+            }
+          ]
+        },
+        config
+      ),
+    /stable ID field/
   );
 });

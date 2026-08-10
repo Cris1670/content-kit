@@ -82,6 +82,8 @@ const detectProjectConfig = (projectRoot) => {
     config: {
       locales,
       baseLocale: detectBaseLocale(locales),
+      collections: defaultConfig.collections,
+      selections: defaultConfig.selections,
       imagePublicPath: defaultConfig.imagePublicPath,
       imagesDir: defaultConfig.imagesDir,
       localePathPattern: defaultConfig.localePathPattern,

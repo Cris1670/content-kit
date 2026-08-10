@@ -16,6 +16,7 @@ const browserGlobals = {
   chrome: 'readonly',
   clearTimeout: 'readonly',
   console: 'readonly',
+  crypto: 'readonly',
   document: 'readonly',
   fetch: 'readonly',
   indexedDB: 'readonly',
@@ -26,7 +27,8 @@ const browserGlobals = {
 const nodeGlobals = {
   Buffer: 'readonly',
   console: 'readonly',
-  process: 'readonly'
+  process: 'readonly',
+  structuredClone: 'readonly'
 };
 
 export default [

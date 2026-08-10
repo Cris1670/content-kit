@@ -11,9 +11,11 @@ import { fail } from '../utils/errors.mjs';
 import { readJsonFile, toUtf8Json } from '../utils/json.mjs';
 import { resolveFromCwd, resolveFromDir } from '../utils/filesystem.mjs';
 import {
+  normalizeBrowserBlockEditExport,
   normalizeBrowserEditExport,
   normalizeBrowserImageEditExport
 } from './normalize-edit-export.mjs';
+import { applyBlockEdits } from './apply-block-edits.mjs';
 
 const applyEditsToMessages = (edits, paths) => {
   const messagesByLocale = new Map();
@@ -188,6 +190,152 @@ const validateConfig = (config) => {
   ) {
     fail('Config field "imagePublicPath" must be a root-relative public path.');
   }
+
+  if (
+    config.collections != null &&
+    (typeof config.collections !== 'object' ||
+      Array.isArray(config.collections))
+  ) {
+    fail('Config field "collections" must be an object.');
+  }
+
+  Object.entries(config.collections ?? {}).forEach(
+    ([collection, collectionConfig]) => {
+      parseMessagePath(collection, `Collection "${collection}"`);
+
+      if (!collectionConfig || typeof collectionConfig !== 'object') {
+        fail(`Collection "${collection}" must be an object.`);
+      }
+
+      const idPathParts = parseMessagePath(
+        collectionConfig.idField,
+        `Collection "${collection}" idField`
+      );
+
+      if (
+        idPathParts.length !== 1 ||
+        typeof idPathParts[0] !== 'string' ||
+        idPathParts[0] !== collectionConfig.idField
+      ) {
+        fail(`Collection "${collection}" idField must be one property name.`);
+      }
+
+      if (
+        !Array.isArray(collectionConfig.operations) ||
+        collectionConfig.operations.some(
+          (operation) =>
+            operation !== 'duplicate' &&
+            operation !== 'remove' &&
+            operation !== 'reorder'
+        )
+      ) {
+        fail(
+          `Collection "${collection}" operations must contain only "duplicate", "remove", or "reorder".`
+        );
+      }
+
+      if (
+        collectionConfig.minItems != null &&
+        (!Number.isSafeInteger(collectionConfig.minItems) ||
+          collectionConfig.minItems < 0)
+      ) {
+        fail(
+          `Collection "${collection}" minItems must be a non-negative integer.`
+        );
+      }
+
+      if (
+        collectionConfig.maxItems != null &&
+        (!Number.isSafeInteger(collectionConfig.maxItems) ||
+          collectionConfig.maxItems <= 0)
+      ) {
+        fail(`Collection "${collection}" maxItems must be a positive integer.`);
+      }
+
+      if (
+        collectionConfig.minItems != null &&
+        collectionConfig.maxItems != null &&
+        collectionConfig.minItems > collectionConfig.maxItems
+      ) {
+        fail(`Collection "${collection}" minItems cannot exceed maxItems.`);
+      }
+    }
+  );
+
+  if (
+    config.selections != null &&
+    (typeof config.selections !== 'object' || Array.isArray(config.selections))
+  ) {
+    fail('Config field "selections" must be an object.');
+  }
+
+  Object.entries(config.selections ?? {}).forEach(
+    ([selectionId, selectionConfig]) => {
+      if (!/^[A-Za-z0-9_-]{1,128}$/u.test(selectionId)) {
+        fail(`Selection "${selectionId}" must have a safe identifier.`);
+      }
+
+      if (
+        !selectionConfig ||
+        typeof selectionConfig !== 'object' ||
+        Array.isArray(selectionConfig)
+      ) {
+        fail(`Selection "${selectionId}" must be an object.`);
+      }
+
+      if (
+        selectionConfig.scope != null &&
+        selectionConfig.scope !== 'locale' &&
+        selectionConfig.scope !== 'all'
+      ) {
+        fail(`Selection "${selectionId}" scope must be "locale" or "all".`);
+      }
+
+      if (
+        !Array.isArray(selectionConfig.options) ||
+        selectionConfig.options.length === 0 ||
+        selectionConfig.options.length > 32
+      ) {
+        fail(`Selection "${selectionId}" must contain 1 to 32 options.`);
+      }
+
+      const values = new Set();
+      selectionConfig.options.forEach((option) => {
+        if (!option || typeof option !== 'object' || Array.isArray(option)) {
+          fail(`Selection "${selectionId}" options must be objects.`);
+        }
+
+        if (
+          typeof option.value !== 'string' ||
+          !/^[A-Za-z0-9_-]{1,128}$/u.test(option.value) ||
+          values.has(option.value)
+        ) {
+          fail(`Selection "${selectionId}" option values must be unique.`);
+        }
+
+        if (
+          typeof option.label !== 'string' ||
+          option.label.trim().length === 0 ||
+          option.label.length > 80
+        ) {
+          fail(
+            `Selection "${selectionId}" option labels must be 1 to 80 characters.`
+          );
+        }
+
+        if (
+          option.icon != null &&
+          (typeof option.icon !== 'string' || option.icon.length > 512)
+        ) {
+          fail(
+            `Selection "${selectionId}" option icons must be strings up to 512 characters.`
+          );
+        }
+
+        values.add(option.value);
+      });
+    }
+  );
 };
 
 const applyBrowserEdits = (config, configDir, options) => {
@@ -211,12 +359,15 @@ const applyBrowserEdits = (config, configDir, options) => {
   const payload = readJsonFile(inputPath);
   const edits = normalizeBrowserEditExport(payload, config);
   const imageEdits = normalizeBrowserImageEditExport(payload, config);
+  const blockEdits = normalizeBrowserBlockEditExport(payload, config);
 
+  applyBlockEdits(blockEdits, config, paths, { write: false });
   applyEditsToMessages(edits, paths);
   applyImageEdits(imageEdits, paths);
+  applyBlockEdits(blockEdits, config, paths);
 
   console.log(
-    `Applied ${edits.length} text edits and ${imageEdits.length} image edits to ${paths.messagesDir}`
+    `Applied ${edits.length} text edits, ${imageEdits.length} image edits, and ${blockEdits.length} block edits to ${paths.messagesDir}`
   );
 };
 
