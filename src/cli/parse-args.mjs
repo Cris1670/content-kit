@@ -1,6 +1,6 @@
 import { fail } from '../utils/errors.mjs';
 
-const supportedCommands = new Set(['init', 'apply-edits', 'help']);
+const supportedCommands = new Set(['init', 'apply-edits', 'mcp', 'help']);
 
 const parseArgs = () => {
   const [command = 'help', ...rawArgs] = process.argv.slice(2);

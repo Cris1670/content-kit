@@ -63,6 +63,57 @@ const setValueAtPath = (root, pathParts, value) => {
   });
 };
 
+const getValueAtPath = (root, pathParts) => {
+  let cursor = root;
+
+  for (const part of pathParts) {
+    if (
+      cursor == null ||
+      typeof cursor !== 'object' ||
+      !Object.hasOwn(cursor, part)
+    ) {
+      return undefined;
+    }
+
+    cursor = cursor[part];
+  }
+
+  return cursor;
+};
+
+const formatMessagePath = (pathParts) =>
+  pathParts.reduce(
+    (path, part) =>
+      typeof part === 'number'
+        ? `${path}[${part}]`
+        : path
+          ? `${path}.${part}`
+          : part,
+    ''
+  );
+
+const listStringMessages = (value, pathParts = [], output = []) => {
+  if (typeof value === 'string') {
+    output.push({ key: formatMessagePath(pathParts), value });
+    return output;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((child, index) =>
+      listStringMessages(child, [...pathParts, index], output)
+    );
+    return output;
+  }
+
+  if (value && typeof value === 'object') {
+    Object.entries(value).forEach(([key, child]) =>
+      listStringMessages(child, [...pathParts, key], output)
+    );
+  }
+
+  return output;
+};
+
 const assertNoSparseArrays = (value, path = '') => {
   if (Array.isArray(value)) {
     for (let index = 0; index < value.length; index += 1) {
@@ -83,4 +134,11 @@ const assertNoSparseArrays = (value, path = '') => {
   }
 };
 
-export { assertNoSparseArrays, parseMessagePath, setValueAtPath };
+export {
+  assertNoSparseArrays,
+  formatMessagePath,
+  getValueAtPath,
+  listStringMessages,
+  parseMessagePath,
+  setValueAtPath
+};

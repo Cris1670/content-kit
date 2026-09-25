@@ -131,6 +131,114 @@ tests, syntax checks, package metadata checks, and Chrome extension manifest
 safety checks. CI also runs dependency auditing, Dependency Review on pull
 requests, and the npm package dry-run.
 
+## AI Agents (MCP) 🤖
+
+`content-kit mcp` serves the configured message catalogs to an AI agent over the
+[Model Context Protocol](https://modelcontextprotocol.io/) (stdio). It runs
+locally next to the working tree, needs no network access, and has no
+dependencies beyond the ICU message parser.
+
+Register it with an MCP client from the consuming app directory:
+
+```json
+{
+  "mcpServers": {
+    "content-kit": {
+      "command": "npx",
+      "args": ["content-kit", "mcp", "--config", "content-kit.config.json"]
+    }
+  }
+}
+```
+
+Writes are off until the config lists the keys editors may change:
+
+```json
+{
+  "rulesFile": "content-rules.json",
+  "mcp": {
+    "writableKeys": ["Profile", "Marketing.hero"],
+    "readOnlyKeys": ["Profile.legal"]
+  }
+}
+```
+
+A key is writable when it starts with an entry in `writableKeys` and with none
+in `readOnlyKeys`. Only existing text messages of the base locale can be
+changed or translated; new keys stay a developer task.
+
+| Tool                      | Writes | Purpose                                                      |
+| ------------------------- | ------ | ------------------------------------------------------------ |
+| `discoverContentSurfaces` | no     | Locales, writable keys and available capabilities            |
+| `resolveContentAuthority` | no     | Which file owns a key and whether it is writable             |
+| `findContentItems`        | no     | Search keys and texts                                        |
+| `loadContentItem`         | no     | A key in every locale, with its revision                     |
+| `getApplicableRules`      | no     | Built-in checks and the project's content rules              |
+| `getContentLifecycle`     | no     | Working tree → commit → merge → deploy, and who does each    |
+| `validateContent`         | no     | Check a proposed value                                       |
+| `previewContentChange`    | no     | Dry run: exact before/after, blockers, exceptions, previewId |
+| `applyApprovedChange`     | yes    | Write exactly an approved preview                            |
+| `verifyAppliedChange`     | no     | Re-read and confirm the approved values                      |
+| `findContentDrift`        | no     | Missing, identical-to-source and invalid translations        |
+
+The write path is guarded end to end:
+
+- `applyApprovedChange` takes only a `previewId`, never text, so what is
+  written is exactly what the editor saw. Previews expire after 30 minutes and
+  can be applied once.
+- Every change carries the `expectedRevision` returned by `loadContentItem`.
+  If any targeted message changed in the meantime, nothing is written.
+- An `idempotencyKey` makes retries safe; reusing it for another preview fails.
+- Placeholders, ICU syntax, select choices and formatting tags must match the
+  base locale. Invisible control and bidi-override characters are refused.
+- Files are replaced atomically and symbolic links are refused.
+- The server never commits, pushes or deploys. Review the diff as usual.
+
+### Content Rules
+
+`rulesFile` points to project rules that `validateContent`, previews and
+`findContentDrift` enforce:
+
+```json
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "protected-product-names",
+      "type": "protectedTerms",
+      "terms": ["Acme Cloud"],
+      "severity": "error",
+      "overridable": false,
+      "message": "Product names are never translated."
+    },
+    {
+      "id": "en-ellipsis-character",
+      "type": "forbiddenPattern",
+      "pattern": "\\.\\.\\.",
+      "locales": ["en"],
+      "severity": "error",
+      "overridable": false,
+      "message": "Use the ellipsis character."
+    }
+  ]
+}
+```
+
+`protectedTerms` must survive translation when the source contains them.
+`forbiddenPattern` is a regular expression (flags `i`, `m`, `s`; always
+Unicode). An error with `overridable: false` blocks a change; an overridable
+one needs an exception reference in `applyApprovedChange`, which the agent
+obtains through the project's exception process.
+
+The same validation is available to other Node code:
+
+```js
+import {
+  loadContentRules,
+  validateContentValue
+} from '@cris1670/content-kit/validation';
+```
+
 ## Package Structure 📦
 
 ```text
@@ -141,8 +249,10 @@ src/browser/               # framework-agnostic browser marker helpers
 src/cli/                   # command parsing and dispatch
 src/config/                # config loading and project detection
 src/edits/                 # browser edit export normalization and applying
+src/mcp/                   # MCP stdio server and catalog tools
 src/messages/              # message key path parsing and catalog patching
 src/utils/                 # JSON, filesystem, and error helpers
+src/validation/            # ICU, placeholder and content-rule validation
 ```
 
 ## Configuration 🧭
@@ -337,3 +447,7 @@ Treat browser edit exports as untrusted input.
   stable IDs, and enforce per-collection minimum and maximum item counts.
 - Reorder imports must contain the exact final ID set after duplicates and
   removals, preventing stale or filtered orders from dropping items.
+- The MCP server reads and writes only the configured locale files, is
+  read-only unless `mcp.writableKeys` is set, validates every tool argument
+  against its advertised schema, and writes only previously previewed changes
+  under a revision guard (see [AI Agents](#ai-agents-mcp-)).
