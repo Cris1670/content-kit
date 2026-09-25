@@ -2,9 +2,10 @@ import { applyBrowserEdits } from '../edits/apply-edits.mjs';
 import { initConfig } from '../config/init-config.mjs';
 import { loadConfig } from '../config/load-config.mjs';
 import { parseArgs } from './parse-args.mjs';
+import { runMcpServer } from '../mcp/run-mcp.mjs';
 import { showHelp } from './help.mjs';
 
-const run = () => {
+const run = async () => {
   try {
     const { command, options } = parseArgs();
 
@@ -22,6 +23,10 @@ const run = () => {
 
     if (command === 'apply-edits') {
       applyBrowserEdits(config, configDir, options);
+    }
+
+    if (command === 'mcp') {
+      await runMcpServer(config, configDir);
     }
   } catch (error) {
     console.error(error.message);

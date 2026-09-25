@@ -371,4 +371,4 @@ const applyBrowserEdits = (config, configDir, options) => {
   );
 };
 
-export { applyBrowserEdits };
+export { applyBrowserEdits, validateConfig };

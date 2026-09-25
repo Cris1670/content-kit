@@ -1,8 +1,8 @@
 {
   "name": "@cris1670/content-kit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
-  "description": "Offline browser editing kit for static and i18n websites.",
+  "description": "Offline browser editing kit and MCP server for static and i18n websites.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -17,7 +17,9 @@
     "i18n",
     "next-intl",
     "translations",
-    "chrome-extension"
+    "chrome-extension",
+    "mcp",
+    "model-context-protocol"
   ],
   "bin": {
     "content-kit": "bin/content-kit.mjs"
@@ -26,12 +28,18 @@
   "types": "./browser.d.mts",
   "exports": {
     ".": "./browser.mjs",
-    "./browser": "./browser.mjs"
+    "./browser": "./browser.mjs",
+    "./validation": {
+      "types": "./validation.d.mts",
+      "default": "./validation.mjs"
+    }
   },
   "files": [
     "bin/",
     "browser.d.mts",
     "browser.mjs",
+    "validation.d.mts",
+    "validation.mjs",
     "src/",
     "content-tool.mjs",
     "README.md",
@@ -49,7 +57,8 @@
     "test": "npm run check",
     "test:unit": "node --test",
     "validate": "node scripts/check.mjs",
-    "pack:check": "npm pack --dry-run"
+    "pack:check": "npm pack --dry-run",
+    "mcp": "node bin/content-kit.mjs mcp"
   },
   "engines": {
     "node": ">=24"
@@ -58,5 +67,8 @@
     "eslint": "10.3.0",
     "eslint-plugin-security": "4.0.0",
     "prettier": "3.8.3"
+  },
+  "dependencies": {
+    "@formatjs/icu-messageformat-parser": "3.5.20"
   }
 }

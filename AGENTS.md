@@ -6,7 +6,7 @@ Instructions for agents working inside `content-kit/`.
 
 1. This folder is a reusable offline browser-edit import kit for client-provided website copy.
 2. Keep the kit portable across projects. Project-specific paths belong in the consuming app's `content-kit.config.json`.
-3. Do not add hosted CMS, database, or online service dependencies here.
+3. Do not add hosted CMS, database, or online service dependencies here. The MCP server (`src/mcp`) is local stdio only and must stay free of network code.
 4. TSV generation/import is legacy and must not be presented as the client workflow.
 
 **Files**
@@ -14,7 +14,8 @@ Instructions for agents working inside `content-kit/`.
 1. `package.json` and `package-lock.json` make this a standalone local npm package.
 2. `bin/content-kit.mjs` is the executable entrypoint.
 3. `content-tool.mjs` is a compatibility wrapper around the new modular entrypoint.
-4. `src/cli`, `src/config`, `src/edits`, `src/messages`, and `src/utils` own focused implementation areas.
+4. `src/cli`, `src/config`, `src/edits`, `src/messages`, `src/mcp`, `src/validation`, and `src/utils` own focused implementation areas.
+   `src/validation` stays pure (no filesystem writes) because it is exported as `@cris1670/content-kit/validation`.
 5. Customer edit exports and `CUSTOMER_README.md` belong in the consuming project or customer handoff, not this package.
 6. `README.md` is developer-facing package documentation.
 7. Consuming apps should use this kit as a local npm package with the correct relative `file:` path and call the `content-kit` binary.
@@ -44,3 +45,4 @@ Instructions for agents working inside `content-kit/`.
 1. Prefer standard Node.js APIs. Avoid new dependencies unless the benefit is clear.
 2. Keep file operations scoped to paths declared in the consuming app `content-kit.config.json`.
 3. Keep errors actionable and tied to edit keys, locales, or file paths.
+4. MCP tools: every input schema is also the enforced validator (`src/mcp/input-schema.mjs`); keep them one definition. Writes go only through `previewContentChange` → `applyApprovedChange` with a revision guard. Never write to stdout outside the JSON-RPC stream.

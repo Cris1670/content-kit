@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning where practical.
 
+## [0.3.0] - 2026-09-25
+
+### Added
+
+- `content-kit mcp`: a local, dependency-light MCP server (stdio) for AI agents to find, load, validate, preview, apply and verify catalog copy, plus a drift report for maintenance.
+- Preview-then-apply write path with expected revisions, idempotency keys, single-use expiring previews, atomic file replacement and opt-in writable key prefixes.
+- ICU-aware validation of placeholders, select choices, formatting tags, invisible characters and length budgets, exported as `@cris1670/content-kit/validation`.
+- Project content rules (`rulesFile`): protected terms and forbidden patterns with severity and overridability.
+
 ## [0.2.0] - 2026-08-03
 
 ### Added
