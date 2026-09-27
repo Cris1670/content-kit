@@ -6,6 +6,7 @@ import {
   countProjectEdits,
   mergeEditPayload
 } from '../chrome-extension/popup/domain/edits.js';
+import { compactStoredImageEdits } from '../chrome-extension/popup/services/storage.js';
 
 const state = {
   contentConfig: {
@@ -112,4 +113,65 @@ test('a later reorder snapshot replaces the collection order', () => {
   assert.equal(countProjectEdits(store.projects[state.origin]), 1);
   assert.deepEqual(exported.blockEdits[0].itemIds, ['member-2', 'member-1']);
   assert.equal(exported.blockEdits[0].overrides, undefined);
+});
+
+test('image imports and exports keep a single image payload', () => {
+  const dataUrl = 'data:image/png;base64,iVBORw0KGgo=';
+  const store = { projects: {}, version: 1 };
+
+  mergeEditPayload({
+    activeProjectId: state.origin,
+    payload: {
+      imageEdits: [
+        {
+          dataUrl,
+          fileName: 'hero.png',
+          key: 'Hero.image',
+          locale: 'en',
+          previewUrl: dataUrl
+        }
+      ],
+      locales: ['en']
+    },
+    payloadOrigin: state.origin,
+    state,
+    store
+  });
+
+  const storedEdit = store.projects[state.origin].imageEdits.en['Hero.image'];
+  const exportedEdit = buildExport(store.projects[state.origin]).imageEdits[0];
+
+  assert.equal(storedEdit.dataUrl, dataUrl);
+  assert.equal(Object.hasOwn(storedEdit, 'previewUrl'), false);
+  assert.equal(exportedEdit.dataUrl, dataUrl);
+  assert.equal(Object.hasOwn(exportedEdit, 'previewUrl'), false);
+});
+
+test('legacy stored image previews are compacted before saving', () => {
+  const dataUrl = 'data:image/png;base64,iVBORw0KGgo=';
+  const store = {
+    projects: {
+      [state.origin]: {
+        imageEdits: {
+          en: {
+            'Hero.image': {
+              dataUrl,
+              previewUrl: dataUrl
+            }
+          }
+        }
+      }
+    },
+    version: 1
+  };
+
+  compactStoredImageEdits(store);
+
+  assert.equal(
+    Object.hasOwn(
+      store.projects[state.origin].imageEdits.en['Hero.image'],
+      'previewUrl'
+    ),
+    false
+  );
 });

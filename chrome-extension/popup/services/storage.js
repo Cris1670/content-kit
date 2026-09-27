@@ -29,8 +29,24 @@ const getStore = async () => {
   return store;
 };
 
+const compactStoredImageEdits = (store) => {
+  Object.values(store.projects ?? {}).forEach((project) => {
+    Object.values(project?.imageEdits ?? {}).forEach((localeEdits) => {
+      Object.values(localeEdits ?? {}).forEach((edit) => {
+        if (edit && typeof edit.dataUrl === 'string') {
+          delete edit.previewUrl;
+        }
+      });
+    });
+  });
+
+  return store;
+};
+
 const saveStore = async (store) => {
-  await chrome.storage.local.set({ [storageKey]: store });
+  await chrome.storage.local.set({
+    [storageKey]: compactStoredImageEdits(store)
+  });
 };
 
 const getExtensionFlags = async () => {
@@ -111,6 +127,7 @@ const savePendingScroll = async (pendingScrollStorageKey, pendingScroll) => {
 };
 
 export {
+  compactStoredImageEdits,
   getEmptyStore,
   getExtensionFlags,
   getStore,

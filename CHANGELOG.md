@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning where practical.
 
+## [0.3.1] - 2026-09-27
+
+### Fixed
+
+- Store each browser image edit once instead of duplicating its base64 payload, compact legacy records on the next save, and request sufficient extension storage for multi-image editing.
+- Show image-save failures in a visible in-page notice instead of relying only on an outline and tooltip.
+
 ## [0.3.0] - 2026-09-25
 
 ### Added

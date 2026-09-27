@@ -85,6 +85,7 @@ let activeDrag = null;
 let activeSelectPicker = null;
 let blockControlsPositionFrame = 0;
 let blockControlsResizeObserver = null;
+let contentNoticeTimer = 0;
 let observer = null;
 let refreshPendingAfterDrag = false;
 let refreshTimer = 0;
@@ -497,8 +498,24 @@ const getStore = async () => {
   return store;
 };
 
+const compactStoredImageEdits = (store) => {
+  Object.values(store.projects ?? {}).forEach((project) => {
+    Object.values(project?.imageEdits ?? {}).forEach((localeEdits) => {
+      Object.values(localeEdits ?? {}).forEach((edit) => {
+        if (edit && typeof edit.dataUrl === 'string') {
+          delete edit.previewUrl;
+        }
+      });
+    });
+  });
+
+  return store;
+};
+
 const saveStore = async (store) => {
-  await chrome.storage.local.set({ [storageKey]: store });
+  await chrome.storage.local.set({
+    [storageKey]: compactStoredImageEdits(store)
+  });
 };
 
 const ensureProject = (store) => {
@@ -765,6 +782,29 @@ const announce = (message) => {
   window.requestAnimationFrame(() => {
     announcer.textContent = message;
   });
+};
+
+const showContentNotice = (message, tone = 'info') => {
+  let notice = document.querySelector('[data-ck-notice]');
+
+  if (!notice) {
+    notice = document.createElement('div');
+    notice.className = 'content-kit-notice';
+    notice.dataset.ckNotice = 'true';
+    document.body.appendChild(notice);
+  }
+
+  window.clearTimeout(contentNoticeTimer);
+  notice.dataset.ckTone = tone;
+  notice.setAttribute('role', tone === 'error' ? 'alert' : 'status');
+  notice.textContent = message;
+  notice.dataset.ckVisible = 'true';
+  announce(message);
+
+  contentNoticeTimer = window.setTimeout(() => {
+    delete notice.dataset.ckVisible;
+    contentNoticeTimer = window.setTimeout(() => notice.remove(), 180);
+  }, 6000);
 };
 
 const getSelectOptions = (element) => {
@@ -2806,24 +2846,14 @@ const storeEdit = async (key, value, locales = [getLocale()]) => {
   return Object.keys(project.edits[getLocale()] ?? {}).length;
 };
 
-const storeImageEdit = async ({
-  dataUrl,
-  fileName,
-  key,
-  mimeType,
-  previewUrl
-}) => {
+const storeImageEdit = async ({ dataUrl, fileName, key, mimeType }) => {
   if (!isSafeContentKey(key)) {
     throw new Error('Invalid Content Kit image key.');
   }
 
   const imageInfo = getSafeImageDataUrlInfo(dataUrl);
 
-  if (
-    !imageInfo ||
-    !getSafeImageDataUrlInfo(previewUrl) ||
-    (mimeType && mimeType !== imageInfo.mimeType)
-  ) {
+  if (!imageInfo || (mimeType && mimeType !== imageInfo.mimeType)) {
     throw new Error('Content Kit image data failed validation.');
   }
 
@@ -2853,7 +2883,6 @@ const storeImageEdit = async ({
     key,
     locale,
     mimeType: imageInfo.mimeType,
-    previewUrl,
     updatedAt: new Date().toISOString(),
     url: window.location.href
   };
@@ -3204,15 +3233,17 @@ const saveImageElement = async (element) => {
       dataUrl,
       fileName: file.name,
       key,
-      mimeType: imageInfo.mimeType,
-      previewUrl: dataUrl
+      mimeType: imageInfo.mimeType
     });
     setImageSource(element, dataUrl);
     syncMatchingImages(key, dataUrl, element);
   } catch (error) {
-    element.dataset.ckError = 'true';
-    element.title =
+    const message =
       error instanceof Error ? error.message : 'Content Kit image save failed.';
+
+    element.dataset.ckError = 'true';
+    element.title = message;
+    showContentNotice(message, 'error');
   } finally {
     delete element.dataset.ckSaving;
   }
@@ -3427,11 +3458,13 @@ const applyStoredImageEdits = (elements, edits) => {
     const key = element.getAttribute('data-ck-image');
     const edit = key ? edits[key] : null;
 
-    if (!edit?.previewUrl || !getSafeImageDataUrlInfo(edit.previewUrl)) {
+    const previewUrl = edit?.dataUrl ?? edit?.previewUrl;
+
+    if (!previewUrl || !getSafeImageDataUrlInfo(previewUrl)) {
       return;
     }
 
-    setImageSource(element, edit.previewUrl);
+    setImageSource(element, previewUrl);
   });
 };
 
@@ -3649,6 +3682,7 @@ const startObserver = () => {
         (target.closest?.(blockControlSelector) ||
           target.closest?.('[data-ck-added-block-id]') ||
           target.closest?.('[data-ck-announcer]') ||
+          target.closest?.('[data-ck-notice]') ||
           target.closest?.('[data-ck-drag-preview]') ||
           target.closest?.('[data-ck-select-picker]') ||
           target.closest?.(editSelector) ||
@@ -3664,6 +3698,7 @@ const startObserver = () => {
           (!node.matches?.(blockControlSelector) &&
             !node.matches?.('[data-ck-added-block-id]') &&
             !node.matches?.('[data-ck-announcer]') &&
+            !node.matches?.('[data-ck-notice]') &&
             !node.matches?.('[data-ck-drag-preview]') &&
             !node.matches?.('[data-ck-select-picker]'))
       );

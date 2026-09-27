@@ -1,6 +1,6 @@
 {
   "name": "@cris1670/content-kit",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "Offline browser editing kit and MCP server for static and i18n websites.",
   "license": "MIT",

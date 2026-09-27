@@ -532,7 +532,6 @@ const mergeEditPayload = ({
       key: edit.key,
       locale: edit.locale,
       mimeType: edit.mimeType,
-      previewUrl: edit.previewUrl,
       updatedAt:
         typeof edit.updatedAt === 'string'
           ? edit.updatedAt
@@ -636,7 +635,6 @@ const buildExport = (project, locale) => {
         key: edit.key,
         locale: currentLocale,
         mimeType: edit.mimeType,
-        previewUrl: edit.previewUrl,
         updatedAt: edit.updatedAt,
         url: edit.url
       });

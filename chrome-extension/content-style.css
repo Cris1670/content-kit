@@ -472,6 +472,39 @@ html.content-kit-edit-on [data-ck-block][data-ck-dragging='true'] {
   border: 0;
 }
 
+.content-kit-notice {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  box-sizing: border-box !important;
+  width: min(420px, calc(100vw - 32px)) !important;
+  padding: 12px 14px !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-radius: 10px !important;
+  background: rgba(49, 46, 129, 0.97) !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.28) !important;
+  font:
+    600 14px/1.4 system-ui,
+    sans-serif !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(8px) !important;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease !important;
+}
+
+.content-kit-notice[data-ck-tone='error'] {
+  background: rgba(185, 28, 28, 0.97) !important;
+}
+
+.content-kit-notice[data-ck-visible='true'] {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
 [data-ck-target='true'] {
   outline: 3px solid #6366f1 !important;
   outline-offset: 5px !important;

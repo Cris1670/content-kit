@@ -123,6 +123,8 @@ be replaced after the new block has been imported.
 Escape reverts the active field before it is saved.
 
 Edits are kept in Chrome extension storage across refreshes and page changes.
+The extension requests `unlimitedStorage` because image replacements are kept
+locally until the reviewer saves the edit file; it does not upload them.
 Loading a shared edit file merges it into the local edits and immediately
 reapplies those edits to the page.
 

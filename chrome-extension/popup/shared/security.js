@@ -164,11 +164,6 @@ const getSafeImageDataUrlInfo = (dataUrl) => {
 
 const assertSafeImageEdit = (edit, index) => {
   const imageInfo = getSafeImageDataUrlInfo(edit.dataUrl);
-  const previewUrl =
-    typeof edit.previewUrl === 'string' &&
-    getSafeImageDataUrlInfo(edit.previewUrl)
-      ? edit.previewUrl
-      : edit.dataUrl;
 
   if (!imageInfo) {
     throw new Error(
@@ -193,8 +188,7 @@ const assertSafeImageEdit = (edit, index) => {
   }
 
   return {
-    mimeType: imageInfo.mimeType,
-    previewUrl
+    mimeType: imageInfo.mimeType
   };
 };
 
