@@ -51,6 +51,7 @@ const checkJavaScriptSyntax = () => {
 
 const checkPackage = () => {
   const packageJson = readJson(join(root, 'package.json'));
+  const packageLock = readJson(join(root, 'package-lock.json'));
 
   assert(
     packageJson.name === '@cris1670/content-kit',
@@ -63,6 +64,11 @@ const checkPackage = () => {
     'package repository must point to the public GitHub repository'
   );
   assert(packageJson.license === 'MIT', 'package license must be MIT');
+  assert(
+    packageLock.version === packageJson.version &&
+      packageLock.packages?.['']?.version === packageJson.version,
+    'package-lock version must match package version'
+  );
   assert(
     packageJson.engines?.node === '>=24',
     'package must require Node >=24'
@@ -81,15 +87,20 @@ const checkPackage = () => {
 
 const checkExtensionManifest = () => {
   const manifest = readJson(join(root, 'chrome-extension/manifest.json'));
+  const packageJson = readJson(join(root, 'package.json'));
   const csp = manifest.content_security_policy?.extension_pages ?? '';
 
   assert(manifest.manifest_version === 3, 'extension must use Manifest V3');
-  assert(manifest.version === '0.4.0', 'extension version must be 0.4.0');
+  assert(
+    manifest.version === packageJson.version,
+    'extension version must match package version'
+  );
   assert(
     Array.isArray(manifest.permissions) &&
       manifest.permissions.includes('storage') &&
-      manifest.permissions.includes('activeTab'),
-    'extension permissions must include storage and activeTab'
+      manifest.permissions.includes('activeTab') &&
+      manifest.permissions.includes('unlimitedStorage'),
+    'extension permissions must include storage, activeTab, and unlimitedStorage'
   );
   assert(
     csp.includes("default-src 'self'"),

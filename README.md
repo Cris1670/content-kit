@@ -431,6 +431,8 @@ Treat browser edit exports as untrusted input.
   Review are part of the release gate.
 - The Chrome extension uses a restrictive Manifest V3 CSP, local scripts only,
   and no remote network calls.
+- The extension requests `unlimitedStorage` for offline image replacements;
+  image data remains local until the reviewer exports the edit file.
 - Extension UI is built with DOM APIs and `textContent`, not `innerHTML`,
   `document.write`, `eval`, or remote code.
 - Edit-tree navigation only opens same-origin HTTP(S) URLs for the active
